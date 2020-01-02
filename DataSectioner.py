@@ -15,12 +15,17 @@ trips = listdir(data_dir)
 trip = trips[0]
 
 path_markers = path.join(data_dir, trip, 'markers.csv')
-col_names = ["time", "key", "value", "col4", "col5", "col6", "col7", "col8", "col9"]
-markers = pd.read_csv(path_markers, sep=';', names=col_names, skiprows=1)
+col_names = ["value", "key", "time", "mode", "col5", "col6", "col7", "station", "col9"]
+markers = pd.read_csv(path_markers, sep=';', names=col_names, skiprows=4)
+markers = markers.drop(['value', 'key', 'col5', 'col6', 'col7', 'col9'], axis=1)
+markers.drop(markers.tail(1).index, inplace=True)
+print(markers.head())
 
 path_acc = path.join(data_dir, trip, 'acceleration.csv')
 acceleration = pd.read_csv(path_acc, sep=',')
 
+path_activity = path.join(data_dir, trip, 'activity_records.csv')
+activity = pd.read_csv(path_activity, sep=',')
 
 # parse time to normalized ms
 def dateReplace(s):
@@ -35,7 +40,14 @@ acceleration['time'] = formatTime(acceleration['time'])
 acceleration['time'] = acceleration['time'].astype(int)
 markers['time'] = formatTime(markers['time'])
 markers['time'] = markers['time'].astype(int)
+
+
 # combine acc and markers
 df = acceleration.merge(markers, on='time', how='inner')
 df = df.ffill()
+
+#drop n remaining rows for the 10 value segments
+n, m = df.shape
+rest = n % 10
+df.drop(df.tail(rest).index, inplace=True)
 print(df)

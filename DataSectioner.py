@@ -27,14 +27,15 @@ def dateReplace(s):
     replaced = s.group(0).replace('Z', '') + '.000Z'
     return replaced
 def formatTime(m):
-    m = np.array(m)
     m = [re.sub(r':\d\d+Z', dateReplace, sample) for sample in m]
     m = [float(datetime.strptime(sample, "%Y-%m-%dT%H:%M:%S.%fZ").strftime('%s.%f')) for sample in m]
     return m
 
 acceleration['time'] = formatTime(acceleration['time'])
+acceleration['time'] = acceleration['time'].astype(int)
 markers['time'] = formatTime(markers['time'])
-
+markers['time'] = markers['time'].astype(int)
 # combine acc and markers
-set = acceleration.join(markers, on='time', how='left', lsuffix='_left', rsuffix='_right')
-print(set.head())
+df = acceleration.merge(markers, on='time', how='inner')
+df = df.ffill()
+print(df)

@@ -1,4 +1,7 @@
-/cgt-stud/
+/data/
 /cgt_stud_2019/
 /venv/
 /.idea/
+/export_mobility.csv
+/export_mobility_v2.csv
+/combine.py

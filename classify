@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Flatten
@@ -49,25 +50,31 @@ for mode in modes:
         dict[mode] = i
 y = to_categorical(y)
 
-# train test split
-train_size = int(X.shape[0]*0.8)
-test_size = X.shape[0]-train_size
-x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-verbose, epochs, batch_size = 0, 10, 32
-samples, features, outputs = x_train.shape[1], x_train.shape[2], y_train.shape[1]
-model = Sequential()
-model.add(Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(samples, features)))
-model.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
-model.add(Dropout(0.5))
-model.add(MaxPooling1D(pool_size=2))
-model.add(Flatten())
-model.add(Dense(100, activation='relu'))
-model.add(Dense(outputs, activation='softmax'))
-model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-# fit network
-model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
-# evaluate model
-_, accuracy = model.evaluate(x_test, y_test, batch_size=batch_size, verbose=0)
+model_best = None
+score_best = None
 
-print(accuracy)
+kfold = KFold(5, True, 1)
+# enumerate splits
+for train, test in kfold.split(X):
+    x_train, x_test, y_train, y_test = X[train], X[test], y[train], y[test]
+    verbose, epochs, batch_size = 0, 10, 32
+    samples, features, outputs = x_train.shape[1], x_train.shape[2], y_train.shape[1]
+    model = Sequential()
+    model.add(Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(samples, features)))
+    model.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Flatten())
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(outputs, activation='softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=verbose)
+    # evaluate the model
+    _, accuracy = model.evaluate(x_test, y_test, batch_size=batch_size, verbose=0)
+    if score_best is None:
+        score_best = accuracy
+    elif accuracy > score_best:
+        score_best = accuracy
+        model_best = model
+    print(accuracy)

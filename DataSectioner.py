@@ -96,5 +96,5 @@ for trip in my_list:
     else:
         df = df.append(df_user, ignore_index=True, sort=False)
 
-print(df)
+df = df.set_index(['time'])
 export_csv = df.to_csv('export.csv', header=True)

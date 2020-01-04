@@ -3,8 +3,6 @@ import pandas as pd
 from datetime import datetime
 import numpy as np
 import re
-import sklearn
-import matplotlib.pyplot as plt
 
 data_dir = "data"
 all_trips = listdir(data_dir)

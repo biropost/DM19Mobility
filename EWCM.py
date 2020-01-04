@@ -23,7 +23,7 @@ i = 0
 dict = {}
 X = None
 y = None
-
+y_walk = None
 for mode in modes:
     if mode in ['BICYCLE', 'BUS', 'CAR', 'METRO', 'TRAM', 'WALK']:
         i = i+1
@@ -46,10 +46,21 @@ for mode in modes:
             X = np.append(X, XXX, axis=0)
         if y is None:
             y = np.full((int(n/sample_n)), i)
+            if mode == "WALK":
+                y_walk = np.full((int(n / sample_n)), 1)
+            else:
+                y_walk = np.full((int(n / sample_n)), 0)
         else:
             y = np.append(y, np.full((int(n/sample_n)), i))
+            if mode == "WALK":
+                y_walk = np.append(y_walk,np.full((int(n/sample_n)), 1))
+            else:
+                y_walk = np.append(y_walk, np.full((int(n/sample_n)), 0))
+
         dict[mode] = i
 y = to_categorical(y)
+y_walk = to_categorical(y_walk)
+print(y_walk.shape)
 
 
 model_best = None
@@ -58,7 +69,7 @@ score_best = None
 kfold = KFold(5, True, 1)
 # enumerate splits
 for train, test in kfold.split(X):
-    x_train, x_test, y_train, y_test = X[train], X[test], y[train], y[test]
+    x_train, x_test, y_train, y_test = X[train], X[test], y_walk[train], y_walk[test]
     verbose, epochs, batch_size = 0, 10, 32
     samples, features, outputs = x_train.shape[1], x_train.shape[2], y_train.shape[1]
     model = Sequential()
@@ -80,6 +91,8 @@ for train, test in kfold.split(X):
         score_best = accuracy_test
         model_best = model
     print("testing accuracy: ", accuracy_test, "training accuracy: ", accuracy_train)
+
+model_best.
 
 # TODO: For each classifier: report the following performance measures: accuracy, precision (macro and weighted), recall (macro and weighted), F1-scores (macro and weighted)
 '''

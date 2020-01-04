@@ -92,7 +92,6 @@ for train, test in kfold.split(X):
         model_best = model
     print("testing accuracy: ", accuracy_test, "training accuracy: ", accuracy_train)
 
-model_best.
 
 # TODO: For each classifier: report the following performance measures: accuracy, precision (macro and weighted), recall (macro and weighted), F1-scores (macro and weighted)
 '''

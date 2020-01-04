@@ -11,18 +11,19 @@ whitelist_ids = {5, 46, 74, 127, 128, 129, 131, 165, 99, 105, 107, 108, 109, 152
 
 def filter_whitelisted_trips(trip):
     # skip files that are not a trip
-    if re.search("^\d+_\d+_\d{4}-\d{2}-\d{2}T\d{6}\.\d{3}$", trip) == None:
+    if re.search("^\d+_\d+_\d{4}-\d{2}-\d{2}T\d{6}\.\d{1,3}$", trip) is None:
         return False
     # extract the trip id
     trip_id = trip.split('_')[1]
     # keep trips that are whitelisted
-    if (int(trip_id) in whitelist_ids):
+    if int(trip_id) in whitelist_ids:
         return True
     # otherwise: skip the trip
     return False
 
-whitelisted_trips = filter(filter_whitelisted_trips, all_trips)
-my_list = list(whitelisted_trips)
+
+whitelisted_trips = list(filter(filter_whitelisted_trips, all_trips))
+
 
 # parse time to normalized ms
 def dateReplace(s):
@@ -38,9 +39,9 @@ def formatTime(m):
 df = None
 
 processed = 0
-total = len(my_list)
+total = len(whitelisted_trips)
 
-for trip in my_list:
+for trip in whitelisted_trips:
     user_id = re.search('\d+', trip).group(0)
     trip_id = re.search('_\d+_', trip).group(0)
     trip_id = re.search('\d+', trip_id).group(0)

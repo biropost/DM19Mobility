@@ -27,14 +27,14 @@ whitelisted_trips = list(filter(filter_whitelisted_trips, all_trips))
 
 # parse time to normalized ms
 def dateReplace(s):
-    replaced = s.group(0).replace('Z', '') + '.000Z'
-    return replaced
+    return s.group(0).replace('Z', '') + '.000Z'
 
 
 def formatTime(m):
     m = [re.sub(r':\d\d+Z', dateReplace, sample) for sample in m]
     m = [float(datetime.strptime(sample, "%Y-%m-%dT%H:%M:%S.%fZ").strftime('%s.%f')) for sample in m]
     return m
+
 
 df = None
 
@@ -45,8 +45,8 @@ for trip in whitelisted_trips:
     user_id = re.search('\d+', trip).group(0)
     trip_id = re.search('_\d+_', trip).group(0)
     trip_id = re.search('\d+', trip_id).group(0)
-    print("processing user: ",user_id, ", trip: ", trip_id, " --- (", processed, "/", total, ")")
-    processed = processed+1
+    print("processing user: ", user_id, ", trip: ", trip_id, " --- (", processed, "/", total, ")")
+    processed = processed + 1
     path_markers = path.join(data_dir, trip, 'markers.csv')
     col_names = ["value", "key", "time", "mode", "col5", "col6", "col7", "station", "col9"]
     markers = pd.read_csv(path_markers, sep=';', names=col_names, skiprows=4)
@@ -80,10 +80,10 @@ for trip in whitelisted_trips:
     # eliminate bimodal segments
     df_user = df_user.reset_index()
     drop_multimodal = []
-    for i in range(int(df_user.shape[0]/10)):
-        counts = df_user.iloc[i*10:i*10+10].groupby('mode').count()
+    for i in range(int(df_user.shape[0] / 10)):
+        counts = df_user.iloc[i * 10:i * 10 + 10].groupby('mode').count()
         if counts.shape[0] != 1:
-            for val in range(i*10, i*10+10):
+            for val in range(i * 10, i * 10 + 10):
                 drop_multimodal.append(val)
     df_user.drop(drop_multimodal, inplace=True)
 

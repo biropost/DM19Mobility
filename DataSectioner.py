@@ -55,8 +55,8 @@ for trip in whitelisted_trips:
 
     path_acc = path.join(data_dir, trip, 'acceleration.csv')
     acceleration = pd.read_csv(path_acc, sep=',')
-    acceleration['acc_norm'] = np.linalg.norm(acceleration[['x', 'y', 'z']].values, axis=1)
-    acceleration = acceleration.drop(['x', 'y', 'z'], axis=1)
+    #acceleration['acc_norm'] = np.linalg.norm(acceleration[['x', 'y', 'z']].values, axis=1)
+    #acceleration = acceleration.drop(['x', 'y', 'z'], axis=1)
 
     path_activity = path.join(data_dir, trip, 'activity_records.csv')
     activity = pd.read_csv(path_activity, sep=',')

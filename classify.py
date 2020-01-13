@@ -27,50 +27,51 @@ y = None
 # 20 seconds per sample
 sample_n = 20
 
-# left out 'BICYCLE' (1.8%), 'TRAIN' (1.4%)
+# left out 'BICYCLE' (1.8%) and 'TRAIN' (1.4%)
 for mode in ['BUS', 'CAR', 'METRO', 'TRAM', 'WALK']:
     print("Preprocessing {} data...".format(mode))
 
-    # this part is much harder than I anticipated...
-
+    # mode id (needed for one-hot-encoding afterwards)
     i = i+1
 
     # get all rows of current mode
-    df_mode = data[data['mode'] == mode]  # [['x', 'y', 'z']]
+    df_mode = data[data['mode'] == mode]
 
-    # removing stuff that does not fit in an entire sequence with 20 samples
-    n = df_mode.shape[0]  # n = 12197 rows
+    # per-trip pre-processing is necessary because we need to keep the data-tripId-relationship for the grouped k-fold.
+    trip_ids = list(df_mode.groupby('trip_id').count().index[1:])
+    for trip_id in trip_ids:
+        df_mode_trip = df_mode[df_mode['trip_id'] == trip_id]
 
-    rest = n % sample_n  # rest = 17
+        # removing stuff that does not fit in an entire sequence with 20 samples
+        n = df_mode_trip.shape[0]  # n = 7819 rows
+        rest = n % sample_n  # rest = 19
+        df_mode_trip = df_mode_trip.drop(df_mode_trip.tail(rest).index)  # removing the last 19 elements
+        n = n - rest  # n is now 7800
+        new_n = int(n / sample_n)  # new_n = 390
 
-    df_mode = df_mode.drop(df_mode.tail(rest).index)  # removing the last 17 elements
+        # reshape to 20 columns and apply fft
+        Xx = np.array(df_mode_trip['x']).reshape(new_n, sample_n)
+        xfft = fft(Xx, axis=0)
+        Xy = np.array(df_mode_trip['y']).reshape(new_n, sample_n)
+        yfft = fft(Xy, axis=0)
+        Xz = np.array(df_mode_trip['z']).reshape(new_n, sample_n)
+        zfft = fft(Xz, axis=0)
 
-    n = n-rest  # n is now 12180
+        # here is where my mind gave up.
+        # need to pass the trip_id along with the data in XXX.
+        # not sure how, because XXX.shape is (something, 20, 6) - i.e. 3-dimensional.
 
-    new_n = int(n / sample_n)  # new_n = 609
+        XXX = np.dstack((Xx, Xy, Xz, xfft, yfft, zfft))
 
-    # reshape to 609 x 20
-    Xx = np.array(df_mode['x']).reshape(new_n, sample_n)
-    # apply fft
-    xfft = fft(Xx, axis=0)
+        if X is None:
+            X = XXX
+        else:
+            X = np.append(X, XXX, axis=0)
 
-    Xy = np.array(df_mode['y']).reshape(new_n, sample_n)
-    yfft = fft(Xy, axis=0)
-
-    Xz = np.array(df_mode['z']).reshape(new_n, sample_n)
-    zfft = fft(Xz, axis=0)
-
-    XXX = np.dstack((Xx, Xy, Xz, xfft, yfft, zfft))
-
-    if X is None:
-        X = XXX
-    else:
-        X = np.append(X, XXX, axis=0)
-
-    if y is None:
-        y = np.full(shape=new_n, fill_value=i)
-    else:
-        y = np.append(y, np.full(shape=new_n, fill_value=i))
+        if y is None:
+            y = np.full(shape=new_n, fill_value=i)
+        else:
+            y = np.append(y, np.full(shape=new_n, fill_value=i))
 
 # one-hot-encode true labels
 y = to_categorical(y)
@@ -84,6 +85,7 @@ exit(0)
 model_best = None
 score_best = None
 
+# use the id of the per-trip-fft-data here for a correct grouped k-fold split.
 groups = data['trip_id']
 
 kfold = GroupKFold(n_splits=5)
